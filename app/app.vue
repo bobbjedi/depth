@@ -10,8 +10,10 @@
                 </div>
             </div>
             <login v-else></login>
-             <modal></modal>
         </div>
+        <depth></depth>
+        <terminal></terminal>
+         <modal></modal>
         <notifications group="foo" />
     </div>
 </template>
@@ -19,6 +21,8 @@
 <script>
 import modal from './components/modal.vue';
 import login from './components/login.vue';
+import depth from './components/depth.vue';
+import terminal from './components/terminal.vue';
 import config from '../config';
 import Store from './Store';
 import $u from './core/utils';
@@ -27,6 +31,8 @@ import api from './core/api';
 export default {
     components: {
         modal,
+        depth,
+        terminal,
         login
     },
     data() {

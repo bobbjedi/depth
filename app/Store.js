@@ -8,18 +8,24 @@ export default new Vue({
     data: {
         isLoad: false,
         user: {},
-        isGame: false,
-        isGameOver: false,
         rout: '',
         modal: {},
         config,
-        system: {}
+        system: {},
+        allData: { // TODO: временно!
+            users: [],
+            buyOrders: {},
+            sellOrders: {}
+        },
+        components: {}
     },
     created() {
         this.logOut();
         this.user.token = localStorage.getItem('wstoken') || false;
         if (this.user.token) {
-            this.updateUser();
+            this.updateUser(()=>{
+                this.updateAll();
+            });
         } else {
             this.isLoad = true;
         }
@@ -36,14 +42,18 @@ export default new Vue({
                 password: '',
                 login: '',
                 address: '',
-                token: false,
-                deposit: 0
+                token: false
             };
         },
-        updatePublic() {
-            axios.get('/public').then(res => res.status === 200 ? this.system = res.data : '');
+        updateAll(){
+            api({action: 'all'}, data => {
+                this.allData = data;
+            });
         },
-        updateUser(cb = false) {
+        updatePublic() {
+            // axios.get('/public').then(res => res.status === 200 ? this.system = res.data : '');
+        },
+        updateUser(cb) {
             this.isLoad = true;
             const self = this;
             api({action: 'getUser', token: this.user.token}, data => {

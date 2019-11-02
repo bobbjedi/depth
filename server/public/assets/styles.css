@@ -1,32 +1,10 @@
-#top {
-    pointer-events: none;
-    background: #ffffff;
-}
-#top img {
-    width: 80%;
-    margin-left: 10%;
-}
-#flappy {
-    border-top: 1px solid grey;
-    border-bottom: 1px solid grey;
-}
-#main{}
+#main {}
 
 body {
-    /* background: #; */
     margin: 0;
 }
 
-.getReady{
-    display: block;
-    position: absolute;
-    top: 40%;
-    width: 60% !important;
-    left: 20%;
-    margin: 0 !important;
-}
-
-#user-content{
+#user-content {
     position: fixed;
     top: 10px;
     right: 5px;
@@ -37,4 +15,53 @@ body {
     display: inline-block;
     width: 30px;
     text-align: right;
+}
+
+/* DEPTH */
+#depth {
+    width: 200px;
+    background: grey;
+    color: white;
+}
+
+.price-line {
+    border: 1px solid black;
+    border-bottom: none;
+    display: flex;
+    width: 200px;
+}
+
+.price-line>div {
+    padding: 1px;
+    width: 50%;
+    margin: 0;
+}
+
+#buy {
+    border-top: 2px solid black;
+}
+
+/* TERMINAL */
+
+#terminal {
+    display: flex;
+}
+
+.terminal-block {
+    margin: 5px;
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    text-align: center;
+    background: #262323;
+}
+
+select{
+    border-radius: 5px;
+    border: 1px solid #492828;
+    text-align: center;
+    color: white;
+    background: rgba(1, 1, 1, 0.7);
+    margin: 1px;
+    height: 20px;
 }

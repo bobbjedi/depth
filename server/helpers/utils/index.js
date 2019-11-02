@@ -27,7 +27,6 @@ module.exports = {
         });
 
         const user = new usersDb({
-            _id: params.address,
             deposits,
             address: params.address,
             login: params.login,

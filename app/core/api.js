@@ -10,9 +10,10 @@ export default async (obj, cb = () => {}, silent, type = 'api') => {
     axios.get(config.domain || '' + '/' + type + '?action=' + obj.action + '&data=' + (await ed.e(JSON.stringify(obj.data))))
         .then(async res => {
             const data = res.data;
-            // console.log('Resp:', obj.action + ' -> ', data.result);
             if (data.success) {
-                cb(JSON.parse(await ed.d(data.result)));
+                let dc = JSON.parse(await ed.d(data.result));
+                console.log('Resp:', obj.action + ' -> ', dc);
+                cb(dc);
                 return;
             }
             console.warn(obj.action + ' error: ', data);

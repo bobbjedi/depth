@@ -1,11 +1,12 @@
 const log = require('../helpers/log');
 const sha256 = require('sha256');
-const {usersDb} = require('./DB');
+const {usersDb, sellDepthDb, buyDepthDb} = require('./DB');
 const $u = require('../helpers/utils');
 const publicApi = require('./publicApi');
 const ed = require('../../common/code_sever');
 const Store = require('../helpers/Store');
 const config = require('../helpers/configReader');
+const depth = require('./depth');
 
 module.exports = (app) => {
     app.get('/api', async (req, res) => {
@@ -55,13 +56,24 @@ module.exports = (app) => {
                 success(await assignUser(newUser), res);
                 break;
 
+            case ('all'):
+                success({
+                    users: await usersDb.find({}),
+                    buyOrders: depth.buy_BTC_BIP.orders,
+                    sellOrders: depth.sell_BTC_BIP.orders
+                }, res);
+                break;
+            case ('setOrder'):
+                const resSetOrder = await depth[GET.type + '_BTC_BIP'].setOrder({value: GET.value, price: GET.price, user: await $u.getUserFromQ({login: GET.login})});
+                success({resSetOrder}, res);
+                break;
             default:
                 error('error endpoint', res);
                 break;
             }
 
         } catch (e) {
-            console.log({e});
+            console.log(e);
             error('Error api code 1', res);
         }
     });

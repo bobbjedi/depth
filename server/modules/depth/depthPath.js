@@ -23,7 +23,7 @@ module.exports = class {
         this.init();
     }
     async init() {
-        const memory = DB[this.type + 'DepthDB'];
+        const memory = DB[this.type + 'DepthDb'];
         this.depth = await memory.findOne({}) || new memory(); // orders: {10: [{user_id: 1, value: 10, price}], 12: [{...}]}
         this.depth.orders = this.depth.orders || {};
         await this.save();
@@ -52,6 +52,7 @@ module.exports = class {
      */
     async setOrder(order) {
         // TODO: проверить валиднось параметров!
+        console.log('Пришел ордер');
         this.queue.push(order);
         this.setNextOrder();
     }
@@ -59,23 +60,42 @@ module.exports = class {
         this.isBlocked = true;
     }
     async unBlock(){
-        this.isBlocked = false;
-        this.setNextOrder();
+        if (this.isBlocked){
+            this.isBlocked = false;
+            this.setNextOrder();
+        }
     }
     async setNextOrder() {
+        console.log('Set next');
         try {
-            if (this.isBlocked) {
-                return;
-            } else if (!this.queue.length){
+            if (!this.queue.length) {
                 this.unBlock();
                 return;
             }
-            const result = await set[this.type](this.queue[0]);
+            if (this.isBlocked){
+                return;
+            }
+            const result = await this[this.type](this.queue[0]);
             console.log({result});
+            if (result){
+                this.queue.shift();
+            }
             this.unBlock();
         } catch (e) {
             this.unBlock();
             log.error('[catch setNextOrder]: ' + e);
+        }
+    }
+    async sell(order) {
+        const {user, price, value} = order;
+        // TODO: порверить баланс юзера
+        const {sell, buy} = this.depths;
+        const {baseCoin, altCoin} = this;
+        const maxBuyPrise = buy.prices[0];
+        // Ставит в спред или ниже - отсрочка
+        if (!maxBuyPrise || maxBuyPrise < price){
+            console.log('setMakerOrder');
+            return this.setMakerOrder(user, 'sell', price, value);
         }
     }
     async buy(order) {
@@ -84,45 +104,53 @@ module.exports = class {
         const {sell, buy} = this.depths;
         const {baseCoin, altCoin} = this;
         const minSellPrise = sell.prices[0];
-
         // Ставит в спред или ниже - отсрочка
-        if (minSellPrise > price){
-            this.setMakerOrder(user, 'buy', price, value);
-            return true;
+        if (!minSellPrise || minSellPrise > price){
+            console.log('setMakerOrder');
+            return this.setMakerOrder(user, 'buy', price, value);
         }
         // ставит чтобы чистить стакан вверх
         let leftValue = value;
         while (sell.prices.length && leftValue > 0){ // пока есть селлы в стакане и не все купил заявленное чистим
-
-            const nextOrdersPrice = sell.prices[0];
-            const orders = sell.orders[nextOrdersPrice];
-
-            for (let i = 0; i < orders.length; i++){
-                const order = orders[i];
-                let differentValues = $u.round(leftValue - order.value);
-                let currentValue;
-                if (differentValues >= 0){ // снесет и поедет дальше
-                    currentValue = order.value;
-                } else if (differentValues < 0){ // остановится здесь
-                    currentValue = leftValue;
+            try {
+                const nextOrdersLinePrice = sell.prices[0];
+                if (nextOrdersLinePrice > price){ // сьели и уперлись в свою цену - ставим остаток в ордер по заявленной цене
+                    await this.setMakerOrder(user, 'buy', price, leftValue);
+                    console.log('Ставим остаток в ордер', {price, leftValue});
                 }
-                const baseCoinAmount = leftValue * price;
-                const seller = await $u.getUserFromQ({_id: order.user_id});
-                await this.userSellCoin(seller, currentValue, baseCoinAmount);
-                await this.userBuyCoin(user, currentValue, baseCoinAmount);
-                leftValue = differentValues;
+                const linePriceOrders = sell.orders[nextOrdersLinePrice];
 
-                //TODO: тут или перещелкнуть цену на следующую, если следующей нет - значит ставим остаток в новый ордер
-                //TODO: если остался недоеденный мейкер - надо его поставить
-                //TODO: удалить ордер из списка ордеров
+                for (let i = 0; i < linePriceOrders.length && leftValue > 0; i++){
+                    const order = linePriceOrders[i];
+                    let differentValues = $u.round(leftValue - order.value);
+                    let currentValue;
+                    if (differentValues < 0){ // кончился ордер тейкера
+                        currentValue = leftValue;
+                        order.value -= leftValue;
+                        leftValue = 0;
+                    } else { // кончился ордер мейкера
+                        linePriceOrders[i].shift(); // удаляем ордер из линии цен
+                        currentValue = order.value;
+                        leftValue = differentValues;
+                    }
+
+                    const baseCoinAmount = leftValue * price;
+                    const seller = await $u.getUserFromQ({_id: order.user_id});
+                    await this.userSellCoin(seller, currentValue, baseCoinAmount);
+                    await this.userBuyCoin(user, currentValue, baseCoinAmount);
 
                 // TODO: closeOrdersDb
+                }
+                if (linePriceOrders.length === 0){ // растрепали линию
+                    sell.prices.shift();
+                }
+            } catch (e) {
+                log.error('set BUY ', e);
+                return false;
             }
         }
+        return true;
 
-        if (leftValue > 0){
-            // TODO: Сьел весь стакан до своей цены.
-        }
     }
     async userSellCoin(seller, amount, baseCoinAmount){
         const {altCoin, baseCoin} = this;
@@ -140,23 +168,28 @@ module.exports = class {
         await buyer.save();
         return true;
     }
-    setMakerOrder(user, type, price, value){
-        const priceArray = this.depths[type].orders[price] || [];
-        priceArray.push({value, price, user_id: user._id}); // кладем ордер юзера
-        let pendingCoinName = this.altCoin;
-        let pendingValue = value;
-        if (type === 'buy'){
-            pendingCoinName = this.baseCoin;
-            pendingValue = value * price;
+    async setMakerOrder(user, type, price, value){
+        try {
+            const priceArray = this.depths[type].orders[price] || [];
+            priceArray.push({value, price, user_id: user._id, time: $u.unix()}); // кладем ордер юзера
+            this.depths[type].orders[price] = priceArray;// закинули обновленный
+
+            let pendingCoinName = this.altCoin;
+            let pendingValue = value;
+            if (type === 'buy'){
+                pendingCoinName = this.baseCoin;
+                pendingValue = value * price;
+            }
+            user.deposits[pendingCoinName].pending += pendingValue;
+            await user.save();
+            await this.save();
+            return true;
+        } catch (e){
+            console.log(e);
+            log.error('setMakerOrder: ' + e);
+            return false;
         }
-        user.deposits[pendingCoinName].pending += pendingValue;
     }
-};
-
-const set = {
-    async sell(order) {
-
-    },
 
 };
 
