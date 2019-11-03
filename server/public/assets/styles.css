@@ -20,7 +20,7 @@ body {
 /* DEPTH */
 #depth {
     width: 200px;
-    background: grey;
+    background: #1e1e1e;
     color: white;
 }
 
@@ -32,7 +32,7 @@ body {
 }
 
 .price-line>div {
-    padding: 1px;
+    padding: 2px 12px;
     width: 50%;
     margin: 0;
 }
@@ -41,6 +41,9 @@ body {
     border-top: 2px solid black;
 }
 
+.price-line .price{
+    text-align: right;
+}
 /* TERMINAL */
 
 #terminal {

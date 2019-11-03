@@ -9,7 +9,7 @@
                 v-for="(o, i) in reducedValues.sell"
                 @click="getPrice(+o.price)"
                 :key="i">
-              <div class="price">{{o.price}}</div>
+              <div class="price txt-red">{{o.price}}</div>
               <div class="value bg-red">{{o.values}}</div>
           </div>
       </div>
@@ -18,12 +18,8 @@
             v-for="(o, i) in reducedValues.buy"
             @click="getPrice(+o.price)"
             :key="i">
+              <div class="price txt-green">{{o.price}}</div>
               <div class="value bg-green">{{o.values}}</div>
-              <div class="price">{{o.price}}</div>
-          </div>
-            <div class="buy-price-line price-line txt-yellow">
-              <div class="value">Value</div>
-               <div class="price">Price</div>
           </div>
       </div>
   </div>
