@@ -9,7 +9,7 @@ require('./modules/cron');
 require('./modules/checkerTx');
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
-const port = 36669;
+const port = 3030;
 
 app.use('/', express.static(DIR_NAME));
 app.get('/', (req, res) => res.sendFile(DIR_NAME + 'index.html'));

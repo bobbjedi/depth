@@ -55,7 +55,7 @@ export default {
             const login = this.userName;
             api({
                 action: 'setOrder',
-                data: {type, price, value, login}
+                data: {type, price, value, login, pairName: 'BTC_BIP'}
             }, data =>{
                 console.log('Set order data:', data);
                 Store.updateAll();

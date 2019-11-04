@@ -11,8 +11,12 @@
             </div>
             <login v-else></login>
         </div>
+        <h3 @click="reset">Reset</h3>
+        <div style="display: flex">
         <depth></depth>
         <terminal></terminal>
+        </div>
+        <orders></orders>
          <modal></modal>
         <notifications group="foo" />
     </div>
@@ -22,6 +26,7 @@
 import modal from './components/modal.vue';
 import login from './components/login.vue';
 import depth from './components/depth.vue';
+import orders from './components/orders.vue';
 import terminal from './components/terminal.vue';
 import config from '../config';
 import Store from './Store';
@@ -32,6 +37,7 @@ export default {
     components: {
         modal,
         depth,
+        orders,
         terminal,
         login
     },
@@ -39,6 +45,11 @@ export default {
         return {Store}
     },
     methods: {
+        reset(){
+            api({action: 'reset'}, ()=>{
+                Store.updateAll();
+            })
+        }
     }
 };
 

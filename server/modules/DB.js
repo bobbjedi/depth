@@ -1,5 +1,6 @@
 const {syncNedb, modelDb} = require('../helpers/syncNedb');
 const Datastore = require('nedb');
+const config = require('../helpers/configReader');
 
 module.exports = {
     usersDb: modelDb(syncNedb(new Datastore({
@@ -15,20 +16,19 @@ module.exports = {
     storeDb: modelDb(syncNedb(new Datastore({
         filename: 'db_/store',
         autoload: true
-    }), 10)),
-
-    sellDepthDb: modelDb(syncNedb(new Datastore({
-        filename: 'db_/sellDepth',
-        autoload: true
-    }), 10)),
-
-    buyDepthDb: modelDb(syncNedb(new Datastore({
-        filename: 'db_/buyDepth',
-        autoload: true
-    }), 10)),
-
-    closedOrdersDb: modelDb(syncNedb(new Datastore({
-        filename: 'db_/closedOrders',
-        autoload: true
     }), 10))
 };
+
+config.tradePairs.forEach(p=>{
+    module.exports[p + '_Depth'] = modelDb(syncNedb(new Datastore({
+        filename: 'db_/' + p + '_Depth',
+        autoload: true
+    }), 10));
+
+    module.exports[p + '_CloseOrders'] = modelDb(syncNedb(new Datastore({
+        filename: 'db_/' + p + '_CloseOrders',
+        autoload: true
+    }), 10));
+
+
+});

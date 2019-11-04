@@ -68,3 +68,12 @@ select{
     margin: 1px;
     height: 20px;
 }
+
+/* ORDERS */
+#orders{
+    display: flex;
+}
+
+.user-order-block{
+   margin: 10px; 
+}

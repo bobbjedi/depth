@@ -6,20 +6,20 @@
               <div class="value">Value</div>
           </div>
           <div class="sell-price-line price-line"
-                v-for="(o, i) in reducedValues.sell"
-                @click="getPrice(+o.price)"
+                v-for="(price, i) in Object.keys(depth.sell).reverse()"
+                @click="getPrice(+price)"
                 :key="i">
-              <div class="price txt-red">{{o.price}}</div>
-              <div class="value bg-red">{{o.values}}</div>
+              <div class="price txt-red">{{price}}</div>
+              <div class="value bg-red">{{depth.sell[price]}}</div>
           </div>
       </div>
       <div id="buy">
-       <div class="sell-price-line price-line"
-            v-for="(o, i) in reducedValues.buy"
-            @click="getPrice(+o.price)"
-            :key="i">
-              <div class="price txt-green">{{o.price}}</div>
-              <div class="value bg-green">{{o.values}}</div>
+       <div class="buy-price-line price-line"
+            v-for="(price, i) in Object.keys(depth.buy).reverse()"
+                @click="getPrice(+price)"
+                :key="i">
+              <div class="price txt-green">{{price}}</div>
+              <div class="value bg-green">{{depth.buy[price]}}</div>
           </div>
       </div>
   </div>
@@ -32,37 +32,36 @@ import Store from '../Store';
 export default {
     data() {
         return {
-            reducedValues: {
-                sell: [],
-                buy: []
-            }
         }
+    },
+    computed: {
+        depth: ()=>Store.allData.depth
     },
     created() {
         Store.components.depth = this;
-        Store.$watch('allData', newVal=>{
-            let sell = [];
-            let buy = [];
-            const {buyOrders, sellOrders} = newVal;
-            Object.keys(buyOrders)
-                .sort((a, b) => b - a)
-                .forEach(p => {
-                    let values = buyOrders[p].reduce((sum, o) =>{
-                        return sum + o.value;
-                    }, 0);
-                    buy.push({price: p, values});
-                });
-            Object.keys(sellOrders)
-                .sort((a, b) => b - a)
-                .forEach(p => {
-                    let values = sellOrders[p].reduce((sum, o) =>{
-                        return sum + o.value;
-                    }, 0);
-                    sell.push({price: p, values});
-                });
-             this.reducedValues.sell = sell;
-             this.reducedValues.buy = buy;
-        });
+        // Store.$watch('allData', newVal=>{
+            // let sell = [];
+            // let buy = [];
+            // const {buyOrders, sellOrders} = newVal;
+            // Object.keys(buyOrders)
+            //     .sort((a, b) => b - a)
+            //     .forEach(p => {
+            //         let values = buyOrders[p].reduce((sum, o) =>{
+            //             return sum + o.value;
+            //         }, 0);
+            //         buy.push({price: p, values});
+            //     });
+            // Object.keys(sellOrders)
+            //     .sort((a, b) => b - a)
+            //     .forEach(p => {
+            //         let values = sellOrders[p].reduce((sum, o) =>{
+            //             return sum + o.value;
+            //         }, 0);
+            //         sell.push({price: p, values});
+            //     });
+            //  this.reducedValues.sell = newVal.sell;
+            //  this.reducedValues.buy = newVal.buy;
+        // });
     },
     methods: {
         getPrice(p) {

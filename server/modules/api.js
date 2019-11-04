@@ -1,12 +1,11 @@
 const log = require('../helpers/log');
 const sha256 = require('sha256');
-const {usersDb, sellDepthDb, buyDepthDb} = require('./DB');
+const {usersDb} = require('./DB');
 const $u = require('../helpers/utils');
 const publicApi = require('./publicApi');
 const ed = require('../../common/code_sever');
-const Store = require('../helpers/Store');
-const config = require('../helpers/configReader');
 const depth = require('./depth');
+const allData = require('./allData');
 
 module.exports = (app) => {
     app.get('/api', async (req, res) => {
@@ -56,16 +55,35 @@ module.exports = (app) => {
                 success(await assignUser(newUser), res);
                 break;
 
+                // ++++++++++++++TESTTTT
             case ('all'):
-                success({
-                    users: await usersDb.find({}),
-                    buyOrders: depth.buy_BTC_BIP.orders,
-                    sellOrders: depth.sell_BTC_BIP.orders
-                }, res);
+                success(await allData(), res);
                 break;
+
+            case ('reset'):
+                (await usersDb.find({})).forEach(u=>{
+                    // u.deposits.BTC.pending = 0;
+                    // u.deposits.BIP.pending = 0;
+                    u.deposits.BTC.balance = 1000;
+                    u.deposits.BIP.balance = 1000;
+                    u.save();
+                });
+                require('./DB').BTC_BIP_Depth.db.remove({}, {multi: true});
+                require('./DB').BTC_BIP_CloseOrders.db.remove({}, {multi: true});
+                setTimeout(()=>{
+                    success({}, res);
+                }, 200);
+                break;
+
+                // ------------ TESTT
             case ('setOrder'):
-                const resSetOrder = await depth[GET.type + '_BTC_BIP'].setOrder({value: GET.value, price: GET.price, user: await $u.getUserFromQ({login: GET.login})});
+                const resSetOrder = await depth[GET.pairName].setOrder({type: GET.type, amount: GET.value, price: GET.price, user: await $u.getUserFromQ({login: GET.login})});
                 success({resSetOrder}, res);
+                break;
+
+            case ('removeOrder'):
+                const resRemoveOrder = await depth[GET.pairName].removeOrder({orderId: GET.orderId, user: await $u.getUserFromQ({login: GET.login})});
+                success({resRemoveOrder}, res);
                 break;
             default:
                 error('error endpoint', res);

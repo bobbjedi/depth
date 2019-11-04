@@ -14,8 +14,10 @@ export default new Vue({
         system: {},
         allData: { // TODO: временно!
             users: [],
-            buyOrders: {},
-            sellOrders: {}
+            depth: {
+                sell: {},
+                buy: {}
+            }
         },
         components: {}
     },
@@ -46,9 +48,11 @@ export default new Vue({
             };
         },
         updateAll(){
-            api({action: 'all'}, data => {
-                this.allData = data;
-            });
+            setTimeout(()=>{
+                api({action: 'all'}, data => {
+                    this.allData = data;
+                });
+            }, 100);
         },
         updatePublic() {
             // axios.get('/public').then(res => res.status === 200 ? this.system = res.data : '');
